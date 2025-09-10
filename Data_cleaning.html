@@ -1,0 +1,134 @@
+<!DOCTYPE HTML>
+<!--
+	Massively by HTML5 UP
+	html5up.net | @ajlkn
+	Free for personal and commercial use under the CCA 3.0 license (html5up.net/license)
+-->
+<html>
+	<head>
+		<title>Guillaume Dushimimana</title>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+		<link rel="stylesheet" href="assets/css/main.css" />
+		<noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
+	</head>
+	<body class="is-preload">
+
+		<!-- Wrapper -->
+			<div id="wrapper">
+
+				<!-- Header -->
+					<header id="header">
+						<p>Guillaume Dushimimana</p>
+					</header>
+
+				<!-- Nav -->
+					<nav id="nav">
+						<ul class="links">
+							<li><a href="index.html">Home</a></li>
+
+						</ul>
+						<ul class="icons">
+							<li><a href="#" class="icon brands fa-twitter"><span class="label">Twitter</span></a></li>
+							<li><a href="#" class="icon brands fa-facebook-f"><span class="label">Facebook</span></a></li>
+							<li><a href="#" class="icon brands fa-instagram"><span class="label">Instagram</span></a></li>
+							<li><a href="#" class="icon brands fa-github"><span class="label">GitHub</span></a></li>
+						</ul>
+					</nav>
+
+				<!-- Main -->
+					<div id="main">
+
+						<!-- Post -->
+							<section class="post">
+								<header class="major">
+									<h1>Data Cleaning<br />
+									Project</h1>
+								</header>
+
+								<!-- Text stuff -->
+									<h2>SQL Data Cleaning Script Description</h2>
+
+									<h3>Overview</h3>
+									<ul>
+										<li>Work in the <code>world_layoffs</code> database.</li>
+										<li>Create staging copies of the raw table.</li>
+										<li>Remove duplicates.</li>
+										<li>Standardize text fields and dates.</li>
+										<li>Handle null/blank values.</li>
+										<li>Drop helper columns and unusable rows.</li>
+									</ul>
+									<h2>Detailed Flow</h2>
+
+									<h3>1. Inspect raw data</h3>
+									<pre><code>USE world_layoffs;
+									SELECT * FROM layoffs;</code></pre>
+									<h3>2. Create a staging table and load data</h3>
+									<pre><code>CREATE TABLE layoffs_staging LIKE layoffs;
+									INSERT INTO layoffs_staging SELECT * FROM layoffs;</code></pre>
+									<p>A second staging table (<code>layoffs_staging2</code>) is later used for deduping and cleaning.</p>
+
+									<h3>3. Find &amp; mark duplicates</h3>
+									<p>Uses <code>ROW_NUMBER()</code> to flag duplicates, partitioned by key fields:</p>
+									<pre><code>PARTITION BY company, location, industry, total_laid_off,
+												percentage_laid_off, date, stage, country, funds_raised_millions</code></pre>
+
+									<h3>4. Materialize and remove duplicates</h3>
+									<p>All rows with their <code>row_num</code> are inserted into <code>layoffs_staging2</code>.  
+									Then rows with <code>row_num &gt; 1</code> are deleted, keeping only the first instance.</p>
+
+									<h3>5. Standardize text fields</h3>
+									<ul>
+										<li>Trim extra spaces in company names: <code>TRIM(company)</code>.</li>
+										<li>Normalize industry values, e.g., <code>Crypto%</code> → <code>Crypto</code>.</li>
+									</ul>
+
+									<h3>6. Fix country formatting</h3>
+									<p>Remove stray trailing periods from country names:</p>
+									<pre><code>TRIM(TRAILING '.' FROM country)</code></pre>
+
+									<h3>7. Convert and cast the date</h3>
+									<ul>
+										<li>Parse text dates like <code>MM/DD/YYYY</code> with <code>STR_TO_DATE</code>.</li>
+										<li>Update the column and cast it to <code>DATE</code>.</li>
+									</ul>
+
+									<h3>8. Handle nulls / blanks</h3>
+									<ul>
+										<li>Convert empty strings in <code>industry</code> to <code>NULL</code>.</li>
+										<li>Fill missing <code>industry</code> values using a self-join on the same company.</li>
+									</ul>
+
+									<h3>9. Remove unusable rows</h3>
+									<p>Delete rows where both <code>total_laid_off</code> and <code>percentage_laid_off</code> are null.</p>
+
+									<h3>10. Clean up helper columns</h3>
+									<p>Drop the deduplication helper column <code>row_num</code> from <code>layoffs_staging2</code>.</p>
+
+									<h2>Notes &amp; Gotchas</h2>
+									<ul>
+										<li><strong>SQL dialect:</strong> This script matches <strong>MySQL 8+</strong> (not SQL Server T-SQL).</li>
+										<li><strong>Partition by date:</strong> Avoid using <code>'date'</code> (string literal). Use backticks <code>`date`</code> instead.</li>
+										<li><strong>Missing table creation:</strong> <code>layoffs_staging2</code> should be created before inserting.</li>
+										<li><strong>Comment fix:</strong> “Inserts all the data into the second column” should be “into the second <em>table</em>.”</li>
+									</ul>
+									<p>This is <b>bold</b> and this is <strong>strong</strong>. This is <i>italic</i> and this is <em>emphasized</em>.
+									This is <sup>superscript</sup> text and this is <sub>subscript</sub> text.
+									This is <u>underlined</u> and this is code: <code>for (;;) { ... }</code>.
+									Finally, this is a <a href="#">link</a>.</p>
+									<hr />
+							</section>						
+
+
+
+		<!-- Scripts -->
+			<script src="assets/js/jquery.min.js"></script>
+			<script src="assets/js/jquery.scrollex.min.js"></script>
+			<script src="assets/js/jquery.scrolly.min.js"></script>
+			<script src="assets/js/browser.min.js"></script>
+			<script src="assets/js/breakpoints.min.js"></script>
+			<script src="assets/js/util.js"></script>
+			<script src="assets/js/main.js"></script>
+
+	</body>
+</html>
